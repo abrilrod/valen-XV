@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mis XV Años · Valen</title>
+  <link rel="icon" href="./img/discoBall.png" type="image/x-icon">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Great+Vibes&display=swap');
+
+    :root {
+      --bg:            #F4EEFF;
+      --primary:       #946CC2;
+      --primary-dark:  #6B45A0;
+      --primary-light: #C4A8E8;
+      --soft:          #D3CDE8;
+      --silver:        #C8C4DC;
+      --silver-l:      #EAE6F8;
+      --silver-d:      #7C799A;
+      --silver-m:      #B8B4D0;
+      --text:          #2A1848;
+      --text-l:        #6B5A88;
+      --white:         #FFFFFF;
+      --glass:         rgba(255,255,255,0.65);
+      --glass-b:       rgba(148,108,194,0.22);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      background: linear-gradient(160deg, #F7F2FF 0%, #EDE4F9 40%, #E6DFF4 100%);
+      color: var(--text);
+      font-family: 'Cormorant Garamond', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: hidden;
+    }
+
+    #canvas {
+      position:fixed; inset:0;
+      pointer-events:none; z-index:0;
+    }
+
+    /* ══════════════════════════════════════
+       PANTALLA DEL SOBRE
+    ══════════════════════════════════════ */
+    #env-screen {
+      position:fixed; inset:0; z-index:200;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:40px;
+      background: radial-gradient(ellipse at 50% 42%, #F0E8FF 0%, #E0D4F5 55%, #CEC0E8 100%);
+      transition: opacity 1.1s ease, visibility 1.1s;
+    }
+    #env-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+
+    /* ── Escenario 3D del sobre ── */
+    .env-scene {
+      perspective: 1100px;
+      width: 370px;
+      height: 290px;
+      position: relative;
+    }
+
+    /* ── Sobre: cuerpo ── */
+    .env-wrap {
+      position: absolute; inset:0;
+      transform-style: preserve-3d;
+    }
+
+    .env-body {
+      position:absolute;
+      bottom:0; left:0; right:0;
+      height: 255px;
+      background: linear-gradient(150deg, #FFFFFF 0%, #F2ECFF 55%, #E8E0F5 100%);
+      border-radius: 6px 6px 14px 14px;
+      border: 1.5px solid rgba(148,108,194,0.28);
+      box-shadow:
+        0 18px 60px rgba(107,69,160,0.22),
+        0 6px 20px rgba(107,69,160,0.12),
+        0 2px 6px rgba(148,108,194,0.10),
+        inset 0 1px 0 rgba(255,255,255,0.95);
+      overflow: hidden;
+    }
+
+    /* líneas internas del sobre (triángulos de los lados) */
+    .env-body::before {
+      content:'';
+      position:absolute; inset:0;
+      background:
+        linear-gradient(135deg, transparent 48.5%, rgba(148,108,194,0.08) 49.5%, transparent 50.5%),
+        linear-gradient(225deg, transparent 48.5%, rgba(148,108,194,0.06) 49.5%, transparent 50.5%);
+    }
+    /* shimmer sweep */
+    .env-body::after {
+      content:'';
+      position:absolute; inset:0;
+      background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.60) 50%, transparent 75%);
+      background-size: 250% 100%;
+      animation: envSweep 3.2s ease-in-out infinite;
+    }
+
+    /* línea plateada central */
+    .env-center-line {
+      position:absolute;
+      bottom:0; left:50%; transform:translateX(-50%);
+      width:1.5px; height:50%;
+      background: linear-gradient(to top, rgba(200,180,240,0.35), transparent);
+      pointer-events:none; z-index:1;
+    }
+
+    /* estrellas alrededor */
+    .e-star {
+      position:absolute;
+      color: var(--primary-light);
+      animation: twinkle 2.2s infinite;
+      pointer-events:none; z-index:10;
+    }
+
+    /* ── Solapa ── */
+    .env-flap {
+      position:absolute;
+      top:0; left:0;
+      width: 370px;
+      transform-origin: top center;
+      transform-style: preserve-3d;
+      transition: transform 1.05s cubic-bezier(.38,0,.12,1);
+      z-index:6;
+    }
+    .env-flap-shape {
+      width:0; height:0;
+      border-left:  185px solid transparent;
+      border-right: 185px solid transparent;
+      border-top:   132px solid #EDE6FA;
+      filter:
+        drop-shadow(0 4px 1px rgba(148,108,194,0.18))
+        drop-shadow(0 0 12px rgba(200,170,240,0.15));
+    }
+    /* borde plateado de la solapa */
+    .env-flap::after {
+      content:'';
+      position:absolute;
+      top:0; left:0;
+      width:0; height:0;
+      border-left:  185px solid transparent;
+      border-right: 185px solid transparent;
+      border-top:   132px solid rgba(200,190,230,0.22);
+    }
+    .env-wrap.open .env-flap { transform: rotateX(-192deg); }
+
+    /* ── Tarjeta que sale del sobre ── */
+    .env-card-peek {
+      position:absolute;
+      bottom: 14px; left:50%; transform:translateX(-50%);
+      width: 300px; height: 200px;
+      background: linear-gradient(145deg, #FFFFFF 0%, #F6F0FF 50%, #EEE6FF 100%);
+      border-radius: 10px;
+      border: 1px solid rgba(148,108,194,0.20);
+      box-shadow: 0 4px 20px rgba(107,69,160,0.15);
+      z-index:2;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:6px;
+      overflow:hidden;
+      /* shimmer */
+    }
+    .env-card-peek::after {
+      content:'';
+      position:absolute; inset:0;
+      background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.65) 50%, transparent 70%);
+      background-size:300% 100%;
+      animation: sweep 4s ease-in-out infinite;
+    }
+    .ecp-mis {
+      font-family:'Cinzel', serif; font-size:8px;
+      letter-spacing:5px; color:var(--silver-d); text-transform:uppercase;
+    }
+    .ecp-xv {
+      font-family:'Cinzel', serif; font-size:42px; font-weight:700;
+      background:linear-gradient(135deg,#C4A8E8,#946CC2,#6B45A0);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text; line-height:1; letter-spacing:-1px;
+    }
+    .ecp-name {
+      font-family:'Great Vibes', cursive; font-size:32px;
+      background:linear-gradient(135deg,#946CC2,#6B45A0);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text; line-height:1.4;
+    }
+    /* decoración lateral plateada en la mini tarjeta */
+    .ecp-deco {
+      position:absolute; top:50%; left:12px; transform:translateY(-50%);
+      width:2px; height:60%; background:linear-gradient(to bottom,transparent,rgba(148,108,194,0.3),transparent);
+      border-radius:2px;
+    }
+    .ecp-deco-r {
+      position:absolute; top:50%; right:12px; transform:translateY(-50%);
+      width:2px; height:60%; background:linear-gradient(to bottom,transparent,rgba(148,108,194,0.3),transparent);
+      border-radius:2px;
+    }
+
+    /* animación: tarjeta sube del sobre */
+    .env-card-peek.rising {
+      animation: cardRise 1.2s cubic-bezier(.2,0,.1,1) forwards;
+    }
+    @keyframes cardRise {
+      0%   { transform: translateX(-50%) translateY(0);   opacity:1; }
+      60%  { transform: translateX(-50%) translateY(-220px); opacity:1; }
+      85%  { transform: translateX(-50%) translateY(-230px) scale(1.04); opacity:.85; }
+      100% { transform: translateX(-50%) translateY(-260px) scale(1.12); opacity:0; }
+    }
+
+    /* ── Texto y botón del sobre ── */
+    .env-copy { text-align:center; }
+    .env-copy p {
+      font-family:'Cormorant Garamond', serif;
+      font-size:14.5px; letter-spacing:4px;
+      color:var(--text-l); text-transform:uppercase;
+      margin-bottom:20px; opacity:.8;
+      font-style:italic;
+    }
+    .btn-open {
+      background: linear-gradient(135deg, #B090D8 0%, #946CC2 50%, #6B45A0 100%);
+      border: none; color:#fff;
+      font-family:'Cinzel', serif;
+      font-size:11.5px; letter-spacing:4.5px;
+      padding:15px 44px; cursor:pointer;
+      text-transform:uppercase; border-radius:60px;
+      transition:all .3s;
+      box-shadow:
+        0 6px 28px rgba(107,69,160,0.42),
+        0 0 0 1px rgba(255,255,255,0.2) inset;
+      position:relative; overflow:hidden;
+    }
+    .btn-open::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.30) 50%,transparent 65%);
+      background-size:250% 100%;
+      animation:sweep 2.8s ease-in-out infinite;
+    }
+    .btn-open:hover { transform:translateY(-2px); box-shadow:0 10px 36px rgba(107,69,160,0.52); }
+
+    /* ══════════════════════════════════════
+       INVITACIÓN
+    ══════════════════════════════════════ */
+    #invitation {
+      position:relative; z-index:1;
+      max-width:430px; margin:0 auto;
+      padding-bottom:70px;
+      opacity:0; transform:translateY(30px);
+      transition:opacity 1.1s ease, transform 1.1s ease;
+    }
+    #invitation.visible { opacity:1; transform:translateY(0); }
+
+    /* ── HERO ── */
+    .hero {
+      text-align:center;
+      padding:62px 24px 38px;
+      position:relative;
+      background:linear-gradient(180deg, rgba(148,108,194,0.13) 0%, transparent 70%);
+    }
+    /* destellos plateados de fondo */
+    .hero-glitter {
+      position:absolute; inset:0; pointer-events:none; overflow:hidden;
+    }
+    .hg {
+      position:absolute;
+      background:radial-gradient(circle, rgba(200,196,220,0.55) 0%, transparent 70%);
+      border-radius:50%;
+      animation:hgPulse 3s ease-in-out infinite;
+    }
+
+    .hero-mis {
+      font-family:'Cinzel', serif;
+      font-size:12px; letter-spacing:8px;
+      color:var(--silver-d); text-transform:uppercase; margin-bottom:2px;
+      position:relative;
+    }
+    .hero-xv {
+      font-family:'Cinzel', serif;
+      font-size:86px; font-weight:700;
+      background:linear-gradient(150deg, #D4BAEC 0%, #946CC2 35%, #C0B0E0 65%, #6B45A0 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text; line-height:1; letter-spacing:-3px;
+      filter:drop-shadow(0 4px 18px rgba(148,108,194,0.38));
+      position:relative;
+    }
+    .hero-xv::after {
+      content:'XV';
+      position:absolute; inset:0;
+      background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.75) 50%,transparent 70%);
+      background-size:300% 100%;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      animation:shimmer 3.5s ease-in-out infinite;
+    }
+    .hero-anos {
+      font-family:'Cinzel', serif;
+      font-size:12px; letter-spacing:8px;
+      color:var(--silver-d); text-transform:uppercase; margin-bottom:26px;
+    }
+    .hero-name {
+      font-family:'Great Vibes', cursive; font-size: 4rem;
+      background:linear-gradient(135deg,#946CC2,#6B45A0,#B090D8);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      filter:drop-shadow(0 2px 14px rgba(148,108,194,0.32));
+      margin-top: 0.5rem;
+      margin-bottom:1rem; line-height:1.4;
+    }
+    .hero-tagline {
+      font-size:17.5px; font-style:italic;
+      color:var(--text-l); line-height:1.4;
+      max-width:300px; margin:0 auto;
+    }
+
+    .hero-tagline-line {
+      font-weight: 800;
+      font-size: 1.2rem;
+    }
+
+    /* disco principal */
+    .disco-main {
+      display:block; margin:0 auto 24px;
+      animation:float 5s ease-in-out infinite;
+      filter:drop-shadow(0 4px 22px rgba(148,108,194,0.45));
+      position:relative;
+    }
+
+    .disco-ball {
+      width: 12rem;
+      height: 12rem;
+    }
+
+    /* ── DIVISOR ── */
+    .divider {
+      display:flex; align-items:center; gap:12px;
+      padding:8px 28px; margin:4px 0;
+    }
+    .div-line {
+      flex:1; height:1px;
+      background:linear-gradient(90deg,transparent,rgba(148,108,194,0.35),transparent);
+    }
+    .div-gem { color:var(--primary-light); font-size:10px; }
+
+    /* ── SECCIONES ── */
+    .section { padding:28px 20px; }
+    .section-label {
+      font-family:'Cinzel', serif;
+      font-size:10px; letter-spacing:5.5px;
+      text-transform:uppercase; color:var(--silver-d);
+      text-align:center; margin-bottom:18px;
+    }
+
+    /* tarjeta */
+    .card {
+      background:var(--glass);
+      border:1.5px solid var(--glass-b);
+      border-radius:16px;
+      backdrop-filter:blur(14px);
+      box-shadow:
+        0 8px 32px rgba(107,69,160,0.12),
+        0 2px 8px rgba(107,69,160,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.92);
+      overflow:hidden; position:relative;
+    }
+    /* shimmer plateado en cards */
+    .card::before {
+      content:'';
+      position:absolute; inset:0; border-radius:16px;
+      background:linear-gradient(105deg,transparent 30%,rgba(210,200,240,0.22) 50%,transparent 70%);
+      background-size:300% 100%;
+      animation:sweep 6s ease-in-out infinite;
+      pointer-events:none; z-index:0;
+    }
+    .card > * { position:relative; z-index:1; }
+
+    /* borde plateado superior en cards */
+    .card::after {
+      content:'';
+      position:absolute; top:0; left:10%; right:10%; height:1.5px;
+      background:linear-gradient(90deg,transparent,rgba(200,190,240,0.7),rgba(220,210,250,0.9),rgba(200,190,240,0.7),transparent);
+      border-radius:2px; z-index:2;
+    }
+
+    /* ── CALENDARIO ── */
+    .cal-inner { padding:28px 20px; text-align:center; }
+    .cal-month {
+      font-family:'Cinzel', serif; font-size:15px; letter-spacing:8px;
+      color:var(--text-l); margin-bottom:20px;
+    }
+    .cal-strip {
+      display:flex;
+      border-top:1px solid rgba(148,108,194,0.18);
+      border-bottom:1px solid rgba(148,108,194,0.18);
+      margin-bottom:22px;
+    }
+    .cal-col { flex:1; padding:10px 2px; text-align:center; }
+    .cal-dname {
+      font-family:'Cinzel', serif; font-size:8px; letter-spacing:1.5px;
+      color:var(--silver-d); opacity:.65; margin-bottom:9px; text-transform:uppercase;
+    }
+    .cal-dnum { font-family:'Cinzel', serif; font-size:14px; color:var(--text-l); opacity:.5; }
+    .cal-col.active .cal-dname { color:var(--primary); opacity:1; font-weight:600; }
+    .cal-col.active .cal-dnum {
+      width:40px; height:40px; line-height:40px; border-radius:50%;
+      background:linear-gradient(135deg,#C4A8E8,#946CC2,#6B45A0);
+      color:#fff; font-size:17px; display:block; margin:0 auto; opacity:1;
+      box-shadow:0 0 24px rgba(148,108,194,0.55),0 4px 14px rgba(107,69,160,0.3);
+    }
+    .cal-time {
+      display:inline-block;
+      border:1.5px solid rgba(148,108,194,0.30);
+      border-radius:60px; padding:11px 34px;
+      font-family:'Cinzel', serif; font-size:19px;
+      letter-spacing:4px; color:var(--text);
+      background:rgba(255,255,255,0.55);
+      box-shadow:0 2px 10px rgba(148,108,194,0.12),inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+
+    /* ── COUNTDOWN ── */
+    .cd-label {
+      font-family:'Great Vibes', cursive; font-size:40px;
+      color:var(--primary); text-align:center; margin-bottom:20px;
+      filter:drop-shadow(0 0 10px rgba(148,108,194,0.28));
+    }
+    .cd-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+    .cd-box {
+      background:var(--glass);
+      border:1.5px solid var(--glass-b);
+      border-radius:14px; padding:18px 6px 13px;
+      text-align:center;
+      backdrop-filter:blur(8px);
+      box-shadow:0 4px 18px rgba(107,69,160,0.10),inset 0 1px 0 rgba(255,255,255,0.85);
+      position:relative; overflow:hidden;
+    }
+    /* línea superior plateada en cada caja */
+    .cd-box::before {
+      content:'';
+      position:absolute; top:0; left:15%; right:15%; height:1.5px;
+      background:linear-gradient(90deg,transparent,rgba(200,190,240,0.8),transparent);
+    }
+    .cd-box::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(105deg,transparent 30%,rgba(220,210,240,0.20) 50%,transparent 70%);
+      background-size:300% 100%;
+      animation:sweep 5s ease-in-out infinite;
+    }
+    .cd-num {
+      font-family:'Cinzel', serif; font-size:33px; font-weight:700;
+      background:linear-gradient(135deg,#C4A8E8,#946CC2,#6B45A0);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text; line-height:1; margin-bottom:7px;
+      position:relative; z-index:1;
+    }
+    .cd-unit {
+      font-family:'Cinzel', serif; font-size:8px; letter-spacing:2.5px;
+      color:var(--silver-d); text-transform:uppercase; opacity:.8;
+      position:relative; z-index:1;
+    }
+
+    /* ── UBICACIÓN ── */
+    .loc-inner { padding:28px 22px; text-align:center; }
+    .icon-circle {
+      width:56px; height:56px; margin:0 auto 16px;
+      background:linear-gradient(135deg,#C4A8E8,#946CC2,#6B45A0);
+      border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 22px rgba(148,108,194,0.42),0 0 0 4px rgba(196,168,232,0.2);
+    }
+    .loc-venue {
+      font-family:'Cinzel', serif; font-size:17px; letter-spacing:2.5px;
+      color:var(--text); margin-bottom:9px;
+    }
+    .loc-addr {
+      font-size:1.1rem; color:var(--text-l);
+      font-style:italic; line-height:1.4; margin-bottom:24px;
+    }
+    .btn-maps {
+      display:block; background:rgba(255,255,255,0.55);
+      border:1.5px solid rgba(148,108,194,0.32);
+      color:var(--primary);
+      font-family:'Cinzel', serif; font-size:11px; letter-spacing:3.5px;
+      padding:14px; text-align:center;
+      text-decoration:none; border-radius:60px;
+      text-transform:uppercase; transition:all .3s;
+      position:relative; overflow:hidden;
+    }
+    .btn-maps::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.45) 50%,transparent 70%);
+      background-size:250% 100%;
+      animation:sweep 4s ease-in-out infinite;
+    }
+    .btn-maps:hover { background:rgba(148,108,194,0.10); box-shadow:0 0 22px rgba(148,108,194,0.25); }
+
+    /* ── DRESS CODE ── */
+    .dc-inner { padding:28px 22px; text-align:center; }
+    .dc-title {
+      font-family:'Cinzel', serif; font-size:21px; letter-spacing:3px;
+      color:var(--text); margin-bottom:6px;
+    }
+    .dc-style {
+      font-family:'Great Vibes', cursive; font-size:44px; color:var(--primary);
+      margin-bottom:20px;
+      filter:drop-shadow(0 0 8px rgba(148,108,194,0.28));
+    }
+    .dc-img {
+      width:190px; margin:0 auto 20px; display:block;
+      filter:drop-shadow(0 6px 20px rgba(107,69,160,0.28));
+      border-radius:4px;
+    }
+    .dc-note {
+      font-size:15.5px; color:var(--text-l);
+      font-style:italic; line-height:1.4;
+    }
+
+    /* ── FOTOS ── */
+    .fotos-inner { padding:28px 22px; text-align:center; }
+    .fotos-title {
+      font-family:'Cinzel', serif; font-size:16px; letter-spacing:3px;
+      color:var(--text); margin-bottom:11px;
+    }
+    .fotos-desc {
+      font-size:15.5px; color:var(--text-l);
+      font-style:italic; line-height:1.4; margin-bottom:22px;
+    }
+    .qr-box {
+      width:200px; height:200px;
+      border:1.5px dashed rgba(148,108,194,0.38);
+      border-radius:12px; margin:0 auto 12px;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:9px;
+      background:rgba(255,255,255,0.55);
+      position:relative; overflow:hidden;
+    }
+    .qr-box::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.40) 50%,transparent 70%);
+      background-size:250% 100%;
+      animation:sweep 5s ease-in-out infinite;
+    }
+
+    .qr-img {
+      width:100%; height:100%;
+    }
+
+    .fotos-hint {
+      font-size:12px; color:var(--silver-d);
+      opacity:.60; font-style:italic;
+    }
+
+    /* ── RSVP ── */
+    .rsvp-inner { padding:28px 22px; }
+    .rsvp-title {
+      font-family:'Cinzel', serif; font-size:18px; letter-spacing:2.5px;
+      color:var(--text); text-align:center; margin-bottom:8px;
+    }
+    .rsvp-deadline {
+      font-size:16px; color:var(--text-l);
+      text-align:center; font-style:italic; margin-bottom:26px;
+    }
+    .rsvp-deadline em { color:var(--primary); font-style:normal; font-weight:600; }
+    .form-group { margin-bottom:15px; }
+    .form-group label {
+      display:block; font-family:'Cinzel', serif;
+      font-size:9px; letter-spacing:3px;
+      color:var(--silver-d); text-transform:uppercase; margin-bottom:7px;
+    }
+    .form-group input {
+      width:100%; background:rgba(255,255,255,0.72);
+      border:1.5px solid rgba(148,108,194,0.25);
+      border-radius:10px; padding:14px 16px;
+      color:var(--text); font-family:'Cormorant Garamond', serif;
+      font-size:17px; outline:none;
+      transition:border-color .3s, box-shadow .3s;
+      -webkit-appearance:none;
+    }
+    .form-group input:focus {
+      border-color:rgba(148,108,194,0.55);
+      box-shadow:0 0 0 3px rgba(148,108,194,0.12);
+      background:rgba(255,255,255,0.92);
+    }
+    .form-group input::placeholder { color:rgba(148,108,194,0.40); }
+
+    .alert-icon{
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .dni-note {
+      display: flex;
+      justify-content: left;
+      background:rgba(148,108,194,0.07);
+      border-left:3px solid rgba(196,168,232,0.7);
+      padding:13px 15px; border-radius:0 9px 9px 0;
+      margin-bottom:22px;
+      font-size:14px; color:var(--text-l);
+      font-style:italic; line-height:1.4;
+    }
+    .btn-confirm {
+      width:100%;
+      background:linear-gradient(135deg,#C4A8E8 0%,#946CC2 50%,#6B45A0 100%);
+      border:none; color:#fff;
+      font-family:'Cinzel', serif;
+      font-size:12px; letter-spacing:4.3px;
+      padding:18px; border-radius:60px; cursor:pointer;
+      text-transform:uppercase; transition:all .3s;
+      box-shadow:0 6px 26px rgba(107,69,160,0.42);
+      position:relative; overflow:hidden;
+    }
+    .btn-confirm::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.28) 50%,transparent 70%);
+      background-size:250% 100%;
+      animation:sweep 3s ease-in-out infinite;
+    }
+    .btn-confirm:hover { transform:translateY(-2px); box-shadow:0 10px 34px rgba(107,69,160,0.50); }
+    .btn-confirm:active { transform:translateY(0); }
+    .rsvp-success { display:none; text-align:center; padding:28px 10px; }
+    .rsvp-success .s-icon { font-size:48px; margin-bottom:14px; }
+    .rsvp-success p { font-size:17px; color:var(--text); font-style:italic; line-height:1.4; font-weight: 600;}
+
+    .rsvp-success p span { font-weight: 400;}
+
+    .check-icon {
+      width: 2rem; height: 2rem;
+      color: var(--primary);
+    }
+
+    /* ── FOOTER ── */
+    .footer { text-align:center; padding:42px 24px 24px; }
+    .footer-name {
+      font-family:'Great Vibes', cursive; font-size:60px;
+      color:var(--primary); opacity:.50; margin-bottom:10px;
+    }
+    .footer-thanks {
+      font-family:'Cinzel', serif; font-size:12px;
+      letter-spacing:5px; color:var(--silver-d); opacity:.55;
+    }
+
+    /* ══════════════════════════════════════
+       ANIMACIONES
+    ══════════════════════════════════════ */
+    @keyframes twinkle {
+      0%,100% { opacity:.2; transform:scale(1); }
+      50%      { opacity:1; transform:scale(1.4); }
+    }
+    @keyframes float {
+      0%,100% { transform:translateY(0); }
+      50%      { transform:translateY(-11px); }
+    }
+    @keyframes shimmer {
+      0%   { background-position:200% center; }
+      100% { background-position:-200% center; }
+    }
+    @keyframes sweep {
+      0%   { background-position:200% center; }
+      100% { background-position:-200% center; }
+    }
+    @keyframes envSweep {
+      0%,100% { background-position:200% center; }
+      50%     { background-position:-200% center; }
+    }
+    @keyframes hgPulse {
+      0%,100% { opacity:.4; transform:scale(1); }
+      50%     { opacity:.75; transform:scale(1.12); }
+    }
+    @keyframes cardRise {
+      0%   { transform:translateX(-50%) translateY(0);    opacity:1; }
+      60%  { transform:translateX(-50%) translateY(-230px); opacity:1; }
+      85%  { transform:translateX(-50%) translateY(-240px) scale(1.05); opacity:.8; }
+      100% { transform:translateX(-50%) translateY(-270px) scale(1.14); opacity:0; }
+    }
+
+    /* scroll reveal */
+    .reveal {
+      opacity:0; transform:translateY(22px);
+      transition:opacity .9s ease, transform .9s ease;
+    }
+    .reveal.in-view { opacity:1; transform:translateY(0); }
+
+    @media (min-width:480px) {
+      body { background:#EDE4F9; }
+      #invitation {
+        box-shadow:0 0 100px rgba(107,69,160,0.12);
+        background:linear-gradient(160deg,#F7F2FF,#EDE4F9);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<!-- ═══ SOBRE ═══ -->
+<div id="env-screen">
+
+  <div class="env-scene">
+    <div class="env-wrap" id="env-wrap">
+
+      <!-- Estrellas -->
+      <span class="e-star" style="top:-28px;left:16px;font-size:18px;animation-delay:0s">✦</span>
+      <span class="e-star" style="top:-22px;right:22px;font-size:13px;animation-delay:.8s">✧</span>
+      <span class="e-star" style="top:42px;left:-34px;font-size:15px;animation-delay:1.3s">✦</span>
+      <span class="e-star" style="top:42px;right:-32px;font-size:12px;animation-delay:.4s">★</span>
+      <span class="e-star" style="bottom:12px;left:-28px;font-size:10px;animation-delay:1.9s">✧</span>
+      <span class="e-star" style="bottom:18px;right:-22px;font-size:14px;animation-delay:1.0s">✦</span>
+      <span class="e-star" style="top:-38px;left:130px;font-size:9px;animation-delay:1.6s">✧</span>
+      <span class="e-star" style="bottom:-24px;left:90px;font-size:11px;animation-delay:.25s">✦</span>
+      <span class="e-star" style="top:90px;left:-22px;font-size:8px;animation-delay:2.1s">✧</span>
+      <span class="e-star" style="top:80px;right:-18px;font-size:9px;animation-delay:.6s">✦</span>
+
+      <!-- Mini tarjeta dentro del sobre -->
+      <div class="env-card-peek" id="env-card-peek">
+        <div class="ecp-deco"></div>
+        <div class="ecp-deco-r"></div>
+        <div class="ecp-mis">Mis</div>
+        <div class="ecp-xv">XV</div>
+        <div class="ecp-name">Valen</div>
+      </div>
+
+      <!-- Solapa -->
+      <div class="env-flap" id="env-flap">
+        <div class="env-flap-shape"></div>
+      </div>
+
+      <!-- Cuerpo del sobre -->
+      <div class="env-body">
+        <div class="env-center-line"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="env-copy">
+    <p>Tenés una invitación especial</p>
+    <button class="btn-open" id="btn-open">✦ &nbsp; Abrir invitación &nbsp; ✦</button>
+  </div>
+
+</div>
+
+<!-- ═══ INVITACIÓN ═══ -->
+<div id="invitation">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-glitter">
+      <div class="hg" style="width:180px;height:180px;top:-40px;left:-20px;animation-delay:0s;"></div>
+      <div class="hg" style="width:140px;height:140px;top:20px;right:-30px;animation-delay:1.2s;"></div>
+      <div class="hg" style="width:100px;height:100px;bottom:0;left:40%;animation-delay:.6s;"></div>
+    </div>
+
+    <p class="hero-mis">Mis</p>
+    <div class="hero-xv">XV</div>
+    <p class="hero-anos">Años</p>
+
+    <!-- Disco ball principal -->
+     <div class="disco-ball-container">
+      <img class="disco-ball" src="./img/discoBall.png" alt="Disco Ball">
+     </div>
+    <!-- <svg class="disco-main" width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="dg1" cx="35%" cy="28%">
+          <stop offset="0%"   stop-color="#FFFFFF"/>
+          <stop offset="18%"  stop-color="#EEE4FF"/>
+          <stop offset="50%"  stop-color="#946CC2"/>
+          <stop offset="100%" stop-color="#2A0F50"/>
+        </radialGradient>
+        <radialGradient id="ds1" cx="30%" cy="26%">
+          <stop offset="0%"   stop-color="rgba(255,255,255,0.88)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </radialGradient>
+        <!-- gradiente para destellos plateados -->
+        <!-- <radialGradient id="dr1" cx="50%" cy="50%">
+          <stop offset="0%"   stop-color="rgba(220,210,255,0.90)"/>
+          <stop offset="100%" stop-color="rgba(220,210,255,0)"/>
+        </radialGradient>
+        <clipPath id="dc1"><circle cx="60" cy="60" r="52"/></clipPath>
+      </defs>
+      <!-- aura externa plateada -->
+      <!-- <circle cx="60" cy="60" r="60" fill="rgba(196,168,232,0.20)"/>
+      <circle cx="60" cy="60" r="56" fill="rgba(196,168,232,0.10)"/> -->
+      <!-- bola -->
+      <!-- <circle cx="60" cy="60" r="52" fill="url(#dg1)"/> -->
+      <!-- grilla -->
+      <!-- <g clip-path="url(#dc1)" opacity="0.30">
+        <line x1="8" y1="26" x2="112" y2="26" stroke="white" stroke-width="1"/>
+        <line x1="8" y1="37" x2="112" y2="37" stroke="white" stroke-width="1"/>
+        <line x1="8" y1="48" x2="112" y2="48" stroke="white" stroke-width="1"/>
+        <line x1="8" y1="59" x2="112" y2="59" stroke="white" stroke-width="1"/>
+        <line x1="8" y1="70" x2="112" y2="70" stroke="white" stroke-width="1"/>
+        <line x1="8" y1="81" x2="112" y2="81" stroke="white" stroke-width="1"/>
+        <line x1="8" y1="92" x2="112" y2="92" stroke="white" stroke-width="1"/>
+        <line x1="26" y1="8"  x2="26"  y2="112" stroke="white" stroke-width="1"/>
+        <line x1="37" y1="8"  x2="37"  y2="112" stroke="white" stroke-width="1"/>
+        <line x1="48" y1="8"  x2="48"  y2="112" stroke="white" stroke-width="1"/>
+        <line x1="59" y1="8"  x2="59"  y2="112" stroke="white" stroke-width="1"/>
+        <line x1="70" y1="8"  x2="70"  y2="112" stroke="white" stroke-width="1"/>
+        <line x1="81" y1="8"  x2="81"  y2="112" stroke="white" stroke-width="1"/>
+        <line x1="92" y1="8"  x2="92"  y2="112" stroke="white" stroke-width="1"/>
+      </g> -->
+      <!-- brillo base -->
+      <!-- <circle cx="60" cy="60" r="52" fill="url(#ds1)"/> -->
+      <!-- destellos plateados -->
+      <!-- <circle cx="41" cy="38" r="6.5" fill="rgba(255,255,255,0.95)"/>
+      <circle cx="52" cy="29" r="4"   fill="rgba(255,255,255,0.88)"/>
+      <circle cx="30" cy="49" r="3"   fill="rgba(255,255,255,0.72)"/>
+      <circle cx="46" cy="25" r="2.5" fill="rgba(255,255,255,0.65)"/>
+      <circle cx="70" cy="42" r="2"   fill="rgba(255,255,255,0.50)"/>
+      <circle cx="35" cy="62" r="2"   fill="rgba(255,255,255,0.45)"/>
+    </svg> -->
+
+    <div class="hero-name">Valen</div>
+    <p class="hero-tagline">Quince años se viven una sola vez,<br/>y esta noche la vamos a hacer eterna.<br/><span class="hero-tagline-line">¿Venís a brillar conmigo?</span></p>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><span class="div-gem">✦</span><div class="div-line"></div></div>
+
+  <!-- FECHA -->
+  <div class="section reveal">
+    <div class="section-label">La fecha</div>
+    <div class="card">
+      <div class="cal-inner">
+        <div class="cal-month">Julio · 2026</div>
+        <div class="cal-strip">
+          <div class="cal-col"><div class="cal-dname">Mié</div><div class="cal-dnum">8</div></div>
+          <div class="cal-col"><div class="cal-dname">Jue</div><div class="cal-dnum">9</div></div>
+          <div class="cal-col"><div class="cal-dname">Vie</div><div class="cal-dnum">10</div></div>
+          <div class="cal-col active"><div class="cal-dname">Sáb</div><div class="cal-dnum">11</div></div>
+          <div class="cal-col"><div class="cal-dname">Dom</div><div class="cal-dnum">12</div></div>
+          <div class="cal-col"><div class="cal-dname">Lun</div><div class="cal-dnum">13</div></div>
+          <div class="cal-col"><div class="cal-dname">Mar</div><div class="cal-dnum">14</div></div>
+        </div>
+        <div class="cal-time">21 : 30 hs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><span class="div-gem">✦</span><div class="div-line"></div></div>
+
+  <!-- COUNTDOWN -->
+  <div class="section reveal">
+    <div class="cd-label">El gran día es en…</div>
+    <div class="cd-grid">
+      <div class="cd-box"><div class="cd-num" id="cd-d">00</div><div class="cd-unit">Días</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-h">00</div><div class="cd-unit">Horas</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-m">00</div><div class="cd-unit">Min</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-s">00</div><div class="cd-unit">Seg</div></div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><span class="div-gem">✦</span><div class="div-line"></div></div>
+
+  <!-- UBICACIÓN -->
+  <div class="section reveal">
+    <div class="section-label">El lugar</div>
+    <div class="card">
+      <div class="loc-inner">
+        <div class="icon-circle">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/>
+            <circle cx="12" cy="9" r="2.8" fill="rgba(148,108,194,0.45)"/>
+          </svg>
+        </div>
+        <div class="loc-venue">Isaac Belsky 638</div>
+        <div class="loc-addr">
+          Entre San Martín y Gómez Fretes<br>
+          Merlo, Buenos Aires · CP 1722
+        </div>
+        <a class="btn-maps"
+           href="https://maps.app.goo.gl/g7THsFtvEFbK3b3A7"
+           target="_blank" rel="noopener">
+          ✦ &nbsp; Ver en Google Maps &nbsp; ✦
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><span class="div-gem">✦</span><div class="div-line"></div></div>
+
+  <!-- DRESS CODE -->
+  <div class="section reveal">
+    <div class="section-label">Dress Code</div>
+    <div class="card">
+      <div class="dc-inner">
+        <div class="dc-title">Elegante Sport</div>
+        <div class="dc-style">Brillá esa noche</div>
+        <img class="dc-img" src="./img/dressCode.png" alt="Dress Code"/>
+        <div class="dc-note">
+          Que las damas iluminen la pista con su belleza única<br>
+          y los caballeros reflejen su porte y elegancia.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><span class="div-gem">✦</span><div class="div-line"></div></div>
+
+  <!-- FOTOS -->
+  <div class="section reveal">
+    <div class="section-label">Compartí el momento</div>
+    <div class="card">
+      <div class="fotos-inner">
+        <div class="icon-circle">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path d="M9 3L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="white"/>
+            <circle cx="12" cy="13" r="3" fill="rgba(148,108,194,0.4)"/>
+          </svg>
+        </div>
+        <div class="fotos-title">Álbum colaborativo</div>
+        <div class="fotos-desc">
+          Escaneá el código y subí tus fotos <br/>en tiempo real durante la noche.
+        </div>
+        <div class="qr-box">
+          <!-- <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="#946CC2" stroke-width="1.5" fill="none"/>
+            <rect x="5" y="5" width="3" height="3" rx="0.5" fill="#946CC2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="#946CC2" stroke-width="1.5" fill="none"/>
+            <rect x="16" y="5" width="3" height="3" rx="0.5" fill="#946CC2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="#946CC2" stroke-width="1.5" fill="none"/>
+            <rect x="5" y="16" width="3" height="3" rx="0.5" fill="#946CC2"/>
+            <line x1="14" y1="14" x2="14" y2="14" stroke="#946CC2" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="17" y1="14" x2="21" y2="14" stroke="#946CC2" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="14" y1="17" x2="14" y2="21" stroke="#946CC2" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="17" y1="17" x2="21" y2="17" stroke="#946CC2" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="21" y1="20" x2="21" y2="21" stroke="#946CC2" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="17" y1="20" x2="17" y2="21" stroke="#946CC2" stroke-width="1.5" stroke-linecap="round"/>
+          </svg> -->
+          <img class="qr-img" src="./img/qr.png" alt="QR Code"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><span class="div-gem">✦</span><div class="div-line"></div></div>
+
+  <!-- RSVP -->
+  <div class="section reveal">
+    <div class="section-label">Confirmá tu asistencia</div>
+    <div class="card">
+      <div class="rsvp-inner">
+        <div class="rsvp-title">¿Nos acompañás?</div>
+        <div class="rsvp-deadline">Confirmá antes del <em>10 de junio</em></div>
+        <div id="rsvp-form">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="f-nombre" placeholder="Tu nombre" autocomplete="given-name"/>
+          </div>
+          <div class="form-group">
+            <label>Apellido</label>
+            <input type="text" id="f-apellido" placeholder="Tu apellido" autocomplete="family-name"/>
+          </div>
+          <div class="form-group">
+            <label>Número de DNI</label>
+            <input type="number" id="f-dni" placeholder="12345678" inputmode="numeric"/>
+          </div>
+          <div class="dni-note">
+            <img src="./img/alertIcon.svg" alt="Alerta" class="alert-icon">Se pedirá el DNI a la entrada del evento. Asegurate de tenerlo a mano el día de la fiesta.
+          </div>
+          <button class="btn-confirm" id="btn-confirm">
+            ✦ &nbsp; Confirmar asistencia &nbsp; ✦
+          </button>
+        </div>
+        <div class="rsvp-success" id="rsvp-success">
+          <div class="s-icon"><img class="check-icon" src="./img/checkIcon.svg" alt="Check"></div>
+          <p>¡Gracias por confirmar!<br><span>Te esperamos para celebrar juntos<br/>esta noche tan especial.</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-name">Valen</div>
+    <div class="footer-thanks">✦ &nbsp; gracias por acompañarme &nbsp; ✦</div>
+  </div>
+
+</div>
+
+<script>
+/* ── PARTÍCULAS ── */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+const COLORS = [
+  [148,108,194],[180,150,220],[196,168,232],
+  [200,196,220],[176,172,205],[160,155,200],
+  [220,215,240],[210,190,235]
+];
+
+function mkP() {
+  const c = COLORS[Math.floor(Math.random()*COLORS.length)];
+  const isSilver = Math.random() > 0.55;
+  return {
+    x: Math.random()*W, y: H+10,
+    r: Math.random()*(isSilver ? 2.4 : 1.8) + 0.5,
+    vy: -(Math.random()*0.34 + 0.09),
+    vx: (Math.random()-.5)*0.20,
+    op: Math.random()*0.65 + 0.22,
+    dec: Math.random()*0.0022 + 0.001,
+    spark: Math.random() > 0.52,
+    silver: isSilver, c
+  };
+}
+
+const parts = Array.from({length:140}, mkP);
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  parts.forEach((p,i) => {
+    p.x+=p.vx; p.y+=p.vy; p.op-=p.dec;
+    if (p.op<=0||p.y<-10) { parts[i]=mkP(); return; }
+    const [r,g,b] = p.silver ? [210,205,235] : p.c;
+    ctx.fillStyle = `rgba(${r},${g},${b},${p.op})`;
+    if (p.spark && p.r > 1.4) {
+      ctx.save(); ctx.translate(p.x, p.y);
+      for (let k=0;k<4;k++) {
+        ctx.rotate(Math.PI/2);
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(p.r*.4, p.r*2.1);
+        ctx.lineTo(0, p.r*1.4);
+        ctx.lineTo(-p.r*.4, p.r*2.1);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ── SOBRE: apertura + tarjeta que sube ── */
+document.getElementById('btn-open').addEventListener('click', openEnv);
+
+function openEnv() {
+  // 1. solapa se abre
+  document.getElementById('env-wrap').classList.add('open');
+
+  // 2. después de que la solapa abre, la tarjeta sube
+  setTimeout(() => {
+    const card = document.getElementById('env-card-peek');
+    card.classList.add('rising');
+  }, 700);
+
+  // 3. transición a la invitación
+  setTimeout(() => {
+    document.getElementById('env-screen').classList.add('hidden');
+    document.body.style.overflowY = 'auto';
+    document.getElementById('invitation').classList.add('visible');
+    setTimeout(initReveal, 200);
+  }, 1700);
+}
+
+/* ── COUNTDOWN ── */
+const TARGET = new Date('2026-07-11T21:30:00-03:00').getTime();
+function tick() {
+  const diff = TARGET - Date.now();
+  if (diff<=0) { ['cd-d','cd-h','cd-m','cd-s'].forEach(id=>document.getElementById(id).textContent='00'); return; }
+  const d=Math.floor(diff/86400000), h=Math.floor(diff%86400000/3600000),
+        m=Math.floor(diff%3600000/60000), s=Math.floor(diff%60000/1000);
+  document.getElementById('cd-d').textContent=String(d).padStart(2,'0');
+  document.getElementById('cd-h').textContent=String(h).padStart(2,'0');
+  document.getElementById('cd-m').textContent=String(m).padStart(2,'0');
+  document.getElementById('cd-s').textContent=String(s).padStart(2,'0');
+}
+tick(); setInterval(tick, 1000);
+
+/* ── SCROLL REVEAL ── */
+function initReveal() {
+  const obs = new IntersectionObserver(entries =>
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in-view'); }),
+    { threshold:.08 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ── RSVP ── */
+document.getElementById('btn-confirm').addEventListener('click', () => {
+  const n = document.getElementById('f-nombre').value.trim();
+  const a = document.getElementById('f-apellido').value.trim();
+  const d = document.getElementById('f-dni').value.trim();
+  if (!n||!a||!d) { alert('Por favor completá todos los campos antes de confirmar.'); return; }
+  // 👉 Conectá acá Formspree / Google Sheets
+  document.getElementById('rsvp-form').style.display = 'none';
+  document.getElementById('rsvp-success').style.display = 'block';
+});
+
+document.body.style.overflowY = 'hidden';
+</script>
+</body>
+</html>
