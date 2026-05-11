@@ -887,7 +887,7 @@
     <div class="card">
       <div class="foto-inner">
         <!-- Reemplazá src con la ruta a tu foto: ./img/valen.jpg -->
-        <img class="foto-quinc" src="./img/ValenTarjeta.png" alt="Valentina" fetchpriority="high" loading="eager"/>
+        <img class="foto-quinc" src="./img/ValenTarjeta.png" alt="Valentina"/>
         <!-- <div class="foto-placeholder" id="foto-wrap">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
             <path d="M9 3L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="#946CC2"/>
@@ -930,7 +930,7 @@
 
         <!-- botón agendar -->
         <a class="btn-agenda"
-           href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=XV+a%C3%B1os+de+Valen+%F0%9F%8E%80&dates=20260712T000000Z%2F20260712T080000Z&details=Mis+XV+a%C3%B1os.+Vestimenta%3A+Elegante+Sport.+No+olvidar+el+DNI.&location=Isaac+Belsky+638%2C+Merlo%2C+Buenos+Aires"
+           href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=XV+a%C3%B1os+de+Valen+%F0%9F%8E%80&dates=20260712T003000Z%2F20260712T043000Z&details=Mis+XV+a%C3%B1os.+Vestimenta%3A+Elegante+Sport.+No+olvidar+el+DNI.&location=Isaac+Belsky+638%2C+Merlo%2C+Buenos+Aires"
            target="_blank" rel="noopener">
           ✦ &nbsp; Agendar en el Calendario &nbsp; ✦
         </a>
@@ -1059,7 +1059,7 @@
           </button>
         </form>
         <div class="rsvp-success" id="rsvp-success">
-          <div class="s-icon"><img class="check-icon" src="./img/checkICon.svg" alt="Check"></div>
+          <div class="s-icon"><img class="check-icon" src="./img/checkIcon.svg" alt="Check"></div>
           <p>¡Gracias por confirmar!<br><span>Te esperamos para celebrar juntos<br/>esta noche tan especial.</span></p>
         </div>
       </div>
@@ -1164,7 +1164,7 @@ function openEnv() {
 }
 
 /* ── COUNTDOWN ── */
-const TARGET = new Date('2026-07-11T21:00:00-03:00').getTime();
+const TARGET = new Date('2026-07-11T21:30:00-03:00').getTime();
 function tick() {
   const diff = TARGET - Date.now();
   if (diff<=0) { ['cd-d','cd-h','cd-m','cd-s'].forEach(id=>document.getElementById(id).textContent='00'); return; }
